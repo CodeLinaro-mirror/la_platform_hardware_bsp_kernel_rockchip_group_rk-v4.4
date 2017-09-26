@@ -193,9 +193,8 @@ static int rockchip_i2s_set_fmt(struct snd_soc_dai *cpu_dai,
 	mask = I2S_CKR_MSS_MASK;
 	switch (fmt & SND_SOC_DAIFMT_MASTER_MASK) {
 	case SND_SOC_DAIFMT_CBS_CFS:
-		/* Set source clock in Master mode */
-		val = I2S_CKR_MSS_MASTER;
-		i2s->is_master_mode = true;
+		val = I2S_CKR_MSS_SLAVE;
+		i2s->is_master_mode = false;
 		break;
 	case SND_SOC_DAIFMT_CBM_CFM:
 		val = I2S_CKR_MSS_SLAVE;
@@ -296,6 +295,19 @@ static int rockchip_i2s_hw_params(struct snd_pcm_substream *substream,
 				   I2S_CKR_RSD_MASK,
 				   I2S_CKR_TSD(div_lrck) |
 				   I2S_CKR_RSD(div_lrck));
+	} else {
+		bclk_rate = i2s->bclk_fs * params_rate(params);
+
+                if (!bclk_rate)
+                        return -EINVAL;
+
+		div_lrck = bclk_rate / params_rate(params);
+
+		regmap_update_bits(i2s->regmap, I2S_CKR,
+                                   I2S_CKR_TSD_MASK |
+                                   I2S_CKR_RSD_MASK,
+                                   I2S_CKR_TSD(div_lrck) |
+                                   I2S_CKR_RSD(div_lrck));
 	}
 
 	switch (params_format(params)) {
@@ -337,15 +349,20 @@ static int rockchip_i2s_hw_params(struct snd_pcm_substream *substream,
 		return -EINVAL;
 	}
 
-	if (substream->stream == SNDRV_PCM_STREAM_CAPTURE)
+	if (substream->stream == SNDRV_PCM_STREAM_CAPTURE) {
 		regmap_update_bits(i2s->regmap, I2S_RXCR,
 				   I2S_RXCR_VDW_MASK | I2S_RXCR_CSR_MASK,
 				   val);
-	else
+	} else {
 		regmap_update_bits(i2s->regmap, I2S_TXCR,
 				   I2S_TXCR_VDW_MASK | I2S_TXCR_CSR_MASK,
 				   val);
-
+		val |= I2S_TXCR_VDW(32);
+		val |= I2S_CHN_4;
+		regmap_update_bits(i2s->regmap, I2S_RXCR,
+                                   I2S_RXCR_VDW_MASK | I2S_RXCR_CSR_MASK,
+                                   val);
+	}
 	if (!IS_ERR(i2s->grf) && i2s->pins) {
 		regmap_read(i2s->regmap, I2S_TXCR, &val);
 		val &= I2S_TXCR_CSR_MASK;
@@ -375,7 +392,7 @@ static int rockchip_i2s_hw_params(struct snd_pcm_substream *substream,
 	regmap_update_bits(i2s->regmap, I2S_DMACR, I2S_DMACR_RDL_MASK,
 			   I2S_DMACR_RDL(16));
 
-	val = I2S_CKR_TRCM_TXRX;
+	val = I2S_CKR_TRCM_TXONLY;
 	if (dai->driver->symmetric_rates && rtd->dai_link->symmetric_rates)
 		val = I2S_CKR_TRCM_TXONLY;
 
@@ -462,7 +479,7 @@ static struct snd_soc_dai_driver rockchip_i2s_dai = {
 	.capture = {
 		.stream_name = "Capture",
 		.channels_min = 2,
-		.channels_max = 2,
+		.channels_max = 8,
 		.rates = SNDRV_PCM_RATE_8000_192000,
 		.formats = (SNDRV_PCM_FMTBIT_S8 |
 			    SNDRV_PCM_FMTBIT_S16_LE |
