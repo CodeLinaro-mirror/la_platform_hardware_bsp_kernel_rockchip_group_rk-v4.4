@@ -4552,8 +4552,7 @@ static irqreturn_t npca110_irq_handler(int irq, void *data)
 	struct npca110_priv *npca110 = data;
 	pr_info(">>>>npca110_irq_handler\n");
 
-	queue_delayed_work(system_power_efficient_wq, &npca110->work,
-			msecs_to_jiffies(npca110->debounce_time));
+	schedule_delayed_work(&npca110->work, msecs_to_jiffies(npca110->debounce_time));
 
 	return IRQ_HANDLED;
 }
@@ -4722,8 +4721,7 @@ static int npca110_i2c_probe(struct i2c_client *i2c,
 
 		enable_irq_wake(linein_irq);
 
-		schedule_delayed_work(&npca110->work,
-				msecs_to_jiffies(3000));
+		schedule_delayed_work(&npca110->work, msecs_to_jiffies(3000));
 	}
 
 	return 0;
