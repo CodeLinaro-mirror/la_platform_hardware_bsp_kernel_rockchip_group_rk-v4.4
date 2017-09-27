@@ -85,6 +85,8 @@ config SND_SOC_ALL_CODECS
 	select SND_SOC_MC13783 if MFD_MC13XXX
 	select SND_SOC_ML26124 if I2C
 	select SND_SOC_NAU8825 if I2C
+	select SND_SOC_NPCA110 if I2C
+	select SND_SOC_NTP8810 if I2C
 	select SND_SOC_HDMI_CODEC
 	select SND_SOC_PCM1681 if I2C
 	select SND_SOC_PCM1792A if SPI_MASTER
@@ -952,6 +954,12 @@ config SND_SOC_ML26124
 
 config SND_SOC_NAU8825
 	tristate
+
+config SND_SOC_NPCA110
+	tristate "NPCA110 DSP"
+
+config SND_SOC_NTP8810
+	tristate "NTP8810 Digital Amplifier"
 
 config SND_SOC_TPA6130A2
 	tristate "Texas Instruments TPA6130A2 headphone amplifier"
