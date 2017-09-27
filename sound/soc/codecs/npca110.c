@@ -112,7 +112,7 @@ static unsigned char MaxxAudio_Cmd44K_FULL[] =
 	0x7F, 0xFF, 0xFF,  // M17- SDO2 from Processed path (DAC2) (0.00 dB)
 	0x00, 0xC8, 0x00,  // Load Mixer Gains - End
 	0x00, 0xA7, 0x3E,  // Set SSI Control (!!! Verify update POP file (patch) is loaded !!!)
-	0x00, 0xBF, 0xD5,  // ==> Master mode, I2S, 24bit, 64 x DCLK,.
+	0x00, 0x83, 0xD5,  // ==> Master mode, I2S, 24bit, 64 x DCLK,.
 	// # PLL and Clocks Configuration (verify 250usec delay between PLL commands)
 	0xFF, 0xAB, 0xFB,  // Set Clock Control Settings
 	0x24, 0x10, 0x09,  // ==>  REF=Crystal,  CLKOUT=REF/10,  DSP=REF/1,  CODEC=REF/10,
