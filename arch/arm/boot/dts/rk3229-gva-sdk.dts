@@ -120,22 +120,6 @@
 			debounce-interval = <100>;
 		};
 	};
-	
-	npca110-sound {
-		compatible = "simple-audio-card";
-		simple-audio-card,format = "i2s";
-		simple-audio-card,name = "rockchip,npca110-codec";
-		simple-audio-card,mclk-fs = <256>;
-		simple-audio-card,cpu {
-			sound-dai = <&i2s1>;
-		};
-		simple-audio-card,codec {
-			sound-dai = <&npca110>;
-			bitclock-master;
-			frame-master;
-		};
-	};
-
 };
 
 &gpu {
@@ -301,34 +285,7 @@
 
 &i2c2 {
 	status = "okay";
-	clock-frequency = <200000>;
 
-	ntp8810@2a{
-                compatible = "ntp8810_c";
-		rockchip,grf = <&grf>;
-                reg = <0x2a>;
-/*
-		pinctrl-names = "default", "power_en";
-                pinctrl-0 = <&ntp_reset>;
-                pinctrl-1 = <&ntp_power>;
-*/              
-		pwd-reset-gpio = <&gpio1 21 GPIO_ACTIVE_HIGH>;
-                pwd-en-gpio = <&gpio1 3 GPIO_ACTIVE_HIGH>;
-                status = "okay";
-        };
-
-
-        npca110: npca110@73 {
-                compatible = "npca110";
-		#sound-dai-cells = <0>;
-                reg = <0x73>;
-		clocks = <&cru SCLK_I2S_OUT>;
-                clock-names = "mclk";
-                pwd-reset-gpio = <&gpio1 14 GPIO_ACTIVE_HIGH>;
-		gpio-det = <&gpio3 23 GPIO_ACTIVE_LOW>;
-                status = "okay";
-        };
-	
 	cw2015@62 {
 		status = "okay";
 		compatible = "cw201x";
@@ -342,18 +299,6 @@
 		divider_res1 = <200>;
 		divider_res2 = <200>;
 	};
-};
-
-&i2s1 {
-        status = "okay";
-/*
-        rockchip,i2s-broken-burst-len;
-        rockchip,playback-channels = <8>;
-        rockchip,capture-channels = <8>;
-        rockchip,bclk-fs = <64>;
-*/
-        rockchip,bclk-fs = <64>;
-        #sound-dai-cells = <0>;
 };
 
 &cpu0 {
@@ -395,14 +340,6 @@
 		};
 	};
 
-	ntp {
-		ntp_reset: ntp_reset {
-			rockchip,pins = <1 21 RK_FUNC_GPIO &pcfg_pull_none>;
-		};
-		ntp_power: ntp_power {
-			rockchip,pins = <1 3 RK_FUNC_GPIO &pcfg_pull_none>;
-		};
-	};
 };
 
 &sdio {
