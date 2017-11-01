@@ -1,0 +1,14 @@
+Rockchip's dummy audio virtual codec
+
+This device support generic audio link.
+
+Required properties:
+
+  - compatible : "rockchip,dummy-codec"
+
+Example:
+
+codec: dummy_codec {
+	compatible = "rockchip,dummy-codec";
+	#sound-dai-cells = <0>;
+};
