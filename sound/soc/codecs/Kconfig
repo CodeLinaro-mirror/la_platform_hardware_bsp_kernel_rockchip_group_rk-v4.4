@@ -577,6 +577,9 @@ config SND_SOC_RL6347A
 	default m if SND_SOC_RT286=m
 	default m if SND_SOC_RT298=m
 
+config SND_SOC_ROCKCHIP_DUMMY_CODEC
+	tristate "Rockchip dummy codec"
+
 config SND_SOC_RT286
 	tristate
 	depends on I2C
