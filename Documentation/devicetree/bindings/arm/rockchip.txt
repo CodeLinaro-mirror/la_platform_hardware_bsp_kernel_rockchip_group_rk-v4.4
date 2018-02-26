@@ -114,3 +114,11 @@ Rockchip platforms device tree bindings
 - Rockchip RK3399 evb:
     Required root node properties:
       - compatible = "rockchip,rk3399-evb", "rockchip,rk3399";
+
+- Rockchip android things full function board:
+    Required root node properties:
+      - compatible = "rockchip,rk3229-at-3nod", "rockchip,rk3229";
+
+- Rockchip android things full function board:
+    Required root node properties:
+      - compatible = "rockchip,rk3229-at-3nod-func", "rockchip,rk3229";
