@@ -47,6 +47,12 @@
 		reset-gpios = <&gpio3 15 GPIO_ACTIVE_LOW>; /* GPIO3_B7 */
 	};
 
+	universal_charger {
+		status = "okay";
+		compatible = "universal-charger";
+		dc-det-gpio = <&gpio2 25 GPIO_ACTIVE_LOW>;
+	};
+
 	vcc_sd: vcc-sd {
 		compatible = "regulator-fixed";
 		gpio = <&gpio1 14 GPIO_ACTIVE_LOW>;
