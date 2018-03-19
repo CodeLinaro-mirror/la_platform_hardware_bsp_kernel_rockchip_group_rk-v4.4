@@ -278,6 +278,7 @@ static int rockchip_i2s_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	unsigned int val = 0;
 	unsigned int mclk_rate, bclk_rate, div_bclk, div_lrck;
+	unsigned int reg;
 
 	if (i2s->is_master_mode) {
 		mclk_rate = clk_get_rate(i2s->mclk);
@@ -337,6 +338,10 @@ static int rockchip_i2s_hw_params(struct snd_pcm_substream *substream,
 		return -EINVAL;
 	}
 
+	regmap_read(i2s->regmap, I2S_XFER, &reg);
+	if (reg)
+		regmap_write(i2s->regmap, I2S_XFER, 0x0);
+
 	if (substream->stream == SNDRV_PCM_STREAM_CAPTURE)
 		regmap_update_bits(i2s->regmap, I2S_RXCR,
 				   I2S_RXCR_VDW_MASK | I2S_RXCR_CSR_MASK,
@@ -345,6 +350,9 @@ static int rockchip_i2s_hw_params(struct snd_pcm_substream *substream,
 		regmap_update_bits(i2s->regmap, I2S_TXCR,
 				   I2S_TXCR_VDW_MASK | I2S_TXCR_CSR_MASK,
 				   val);
+
+	if (reg)
+		regmap_write(i2s->regmap, I2S_XFER, 0x3);
 
 	if (!IS_ERR(i2s->grf) && i2s->pins) {
 		regmap_read(i2s->regmap, I2S_TXCR, &val);
