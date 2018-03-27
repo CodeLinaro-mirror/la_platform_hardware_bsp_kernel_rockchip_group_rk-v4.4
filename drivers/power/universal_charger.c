@@ -201,8 +201,8 @@ static int universal_cg_usb_get_property(struct power_supply *psy,
 	int online = 0;
 	int ret = 0;
 
-	if (cg->usb_charger != USB_TYPE_UNKNOWN_CHARGER &&
-	    cg->usb_charger != USB_TYPE_NONE_CHARGER ||
+	if ((cg->usb_charger != USB_TYPE_UNKNOWN_CHARGER &&
+	     cg->usb_charger != USB_TYPE_NONE_CHARGER) ||
 	    cg->dc_charger != DC_TYPE_NONE_CHARGER)
 		online = 1;
 
