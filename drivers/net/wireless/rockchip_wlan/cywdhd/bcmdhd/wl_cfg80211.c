@@ -8723,6 +8723,8 @@ static s32 wl_setup_wiphy(struct wireless_dev *wdev, struct device *sdiofunc_dev
 	/* If this is not provided cfg stack will get disconnect
 	 * during suspend.
 	 */
+
+#if (0)
 	brcm_wowlan_config = kmalloc(sizeof(struct cfg80211_wowlan), GFP_KERNEL);
 	if (brcm_wowlan_config) {
 		brcm_wowlan_config->disconnect = true;
@@ -8736,6 +8738,7 @@ static s32 wl_setup_wiphy(struct wireless_dev *wdev, struct device *sdiofunc_dev
 		WL_ERR(("Can not allocate memory for brcm_wowlan_config,"
 					" So wiphy->wowlan_config is set to NULL\n"));
 	}
+#endif
 	wdev->wiphy->wowlan_config = brcm_wowlan_config;
 #else
 	wdev->wiphy->wowlan.flags = WIPHY_WOWLAN_ANY;

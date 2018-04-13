@@ -40,7 +40,7 @@
 
 #define BIT_WRITEABLE_SHIFT	16
 #define SCHEDULE_DELAY		(60 * HZ)
-#define OTG_SCHEDULE_DELAY	(2 * HZ)
+#define OTG_SCHEDULE_DELAY	(1 * HZ)
 
 struct rockchip_usb2phy;
 
@@ -525,7 +525,7 @@ static int rockchip_usb2phy_init(struct phy *phy)
 		}
 
 		schedule_delayed_work(&rport->otg_sm_work,
-				      OTG_SCHEDULE_DELAY * 3);
+				      OTG_SCHEDULE_DELAY);
 	} else if (rport->port_id == USB2PHY_PORT_HOST) {
 		/* clear linestate and enable linestate detect irq */
 		ret = rockchip_usb2phy_enable_line_irq(rphy, rport, true);
@@ -896,7 +896,7 @@ static void rockchip_usb2phy_otg_sm_work(struct work_struct *work)
 			dev_dbg(&rport->phy->dev, "usb disconnect\n");
 			rport->state = OTG_STATE_B_IDLE;
 			rport->perip_connected = false;
-			delay = OTG_SCHEDULE_DELAY * 2;
+			delay = OTG_SCHEDULE_DELAY;
 			wake_unlock(&rport->wakelock);
 		}
 		sch_work = true;
@@ -1618,6 +1618,17 @@ disable_clks:
 	return ret;
 }
 
+static int rk322x_usb2phy_tuning(struct rockchip_usb2phy *rphy)
+{
+	int ret = 0;
+
+	/* Open pre-emphasize in non-chirp state for PHY0 otg port */
+	if (rphy->phy_cfg->reg == 0x760)
+		ret = regmap_write(rphy->grf, 0x76c, 0x00070004);
+
+	return ret;
+}
+
 static int rk3328_usb2phy_tuning(struct rockchip_usb2phy *rphy)
 {
 	int ret;
@@ -1811,6 +1822,7 @@ static const struct rockchip_usb2phy_cfg rk322x_phy_cfgs[] = {
 	{
 		.reg = 0x760,
 		.num_ports	= 2,
+		.phy_tuning	= rk322x_usb2phy_tuning,
 		.clkout_ctl	= { 0x0768, 4, 4, 1, 0 },
 		.port_cfgs	= {
 			[USB2PHY_PORT_OTG] = {
