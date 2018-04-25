@@ -7663,6 +7663,11 @@ wl_cfg80211_start_ap(
 		dev_role = NL80211_IFTYPE_P2P_GO;
 	} else if (dev_role == NL80211_IFTYPE_AP) {
 		dhd->op_mode |= DHD_FLAG_HOSTAP_MODE;
+#ifdef ARP_OFFLOAD_SUPPORT
+		/* IF SoftAP is enabled, disable arpoe */
+		dhd_arp_offload_set(dhd, 0);
+		dhd_arp_offload_enable(dhd, FALSE);
+#endif /* ARP_OFFLOAD_SUPPORT */
 	} else {
 		/* only AP or GO role need to be handled here. */
 		err = -EINVAL;
@@ -7805,6 +7810,11 @@ wl_cfg80211_stop_ap(
 				}
 			}
 		} else if (is_rsdb_supported == 0) {
+			if ((err = wldev_ioctl(dev, WLC_SET_AP, &ap, sizeof(s32), true)) < 0) {
+				WL_ERR(("setting AP mode failed %d \n", err));
+				err = -ENOTSUPP;
+				goto exit;
+			}
 			err = wldev_ioctl(dev, WLC_SET_INFRA, &infra, sizeof(s32), true);
 			if (err < 0) {
 				WL_ERR(("SET INFRA error %d\n", err));
