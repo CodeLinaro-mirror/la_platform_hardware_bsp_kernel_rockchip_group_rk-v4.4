@@ -476,10 +476,12 @@ s32 wl_cfg80211_interface_ops(struct bcm_cfg80211 *cfg,
 s32 wl_cfg80211_add_del_bss(struct bcm_cfg80211 *cfg,
 	struct net_device *ndev, s32 bsscfg_idx,
 	enum nl80211_iftype iface_type, s32 del, u8 *addr);
+#ifdef GTK_OFFLOAD_SUPPORT
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 1, 0))
 static s32 wl_cfg80211_set_rekey_data(struct wiphy *wiphy, struct net_device *dev,
 	struct cfg80211_gtk_rekey_data *data);
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(3, 1, 0) */
+#endif
 chanspec_t wl_chspec_driver_to_host(chanspec_t chanspec);
 chanspec_t wl_chspec_host_to_driver(chanspec_t chanspec);
 #ifdef WL11ULB
@@ -8501,9 +8503,11 @@ static struct cfg80211_ops wl_cfg80211_ops = {
 #ifdef WL_CFG80211_ACL
 	.set_mac_acl = wl_cfg80211_set_mac_acl,
 #endif /* WL_CFG80211_ACL */
+#ifdef GTK_OFFLOAD_SUPPORT
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 1, 0))
 	.set_rekey_data = wl_cfg80211_set_rekey_data,
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(3, 1, 0) */
+#endif
 };
 
 s32 wl_mode_to_nl80211_iftype(s32 mode)
@@ -16183,6 +16187,7 @@ wl_cfg80211_get_sta_channel(struct net_device *dev)
 }
 #endif /* WL_SUPPORT_AUTO_CHANNEL */
 
+#ifdef GTK_OFFLOAD_SUPPORT
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 1, 0))
 static s32
 wl_cfg80211_set_rekey_data(struct wiphy *wiphy, struct net_device *dev,
@@ -16219,3 +16224,4 @@ wl_cfg80211_set_rekey_data(struct wiphy *wiphy, struct net_device *dev,
 	return err;
 }
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(3, 1, 0) */
+#endif
