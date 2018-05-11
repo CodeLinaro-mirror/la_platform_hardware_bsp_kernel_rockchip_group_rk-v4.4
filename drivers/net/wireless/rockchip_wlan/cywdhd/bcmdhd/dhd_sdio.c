@@ -7000,13 +7000,83 @@ dhdsdio_chipmatch(uint16 chipid)
 	return FALSE;
 }
 
+static int
+dhd_conf_get_mac(dhd_pub_t *dhd, bcmsdh_info_t *sdh, uint8 *mac)
+{
+	int i, err = -1;
+	uint8 *ptr = 0;
+	unsigned char tpl_code, tpl_link='\0';
+	uint8 header[3] = {0x80, 0x07, 0x19};
+	uint8 *cis;
+
+	if (!(cis = MALLOC(dhd->osh, SBSDIO_CIS_SIZE_LIMIT))) {
+		DHD_ERROR(("%s: cis malloc failed\n", __FUNCTION__));
+		return err;
+	}
+	bzero(cis, SBSDIO_CIS_SIZE_LIMIT);
+
+	if ((err = bcmsdh_cis_read(sdh, 0, cis, SBSDIO_CIS_SIZE_LIMIT))) {
+		DHD_ERROR(("%s: cis read err %d\n", __FUNCTION__, err));
+		MFREE(dhd->osh, cis, SBSDIO_CIS_SIZE_LIMIT);
+		return err;
+	}
+	err = -1; // reset err;
+	ptr = cis;
+	do {
+		/* 0xff means we're done */
+		tpl_code = *ptr;
+		ptr++;
+		if (tpl_code == 0xff)
+			break;
+
+		/* null entries have no link field or data */
+		if (tpl_code == 0x00)
+			continue;
+
+		tpl_link = *ptr;
+		ptr++;
+		/* a size of 0xff also means we're done */
+		if (tpl_link == 0xff)
+			break;
+
+		if (tpl_code == 0x80 && tpl_link == 0x07 && *ptr == 0x19)
+			break;
+
+		ptr += tpl_link;
+	} while (1);
+
+	if (tpl_code == 0x80 && tpl_link == 0x07 && *ptr == 0x19) {
+		/* Normal OTP */
+		memcpy(mac, ptr+1, 6);
+		err = 0;
+	} else {
+		ptr = cis;
+		/* Special OTP */
+		if (bcmsdh_reg_read(sdh, SI_ENUM_BASE, 4) == 0x16044330) {
+			for (i=0; i<SBSDIO_CIS_SIZE_LIMIT; i++) {
+				if (!memcmp(header, ptr, 3)) {
+					memcpy(mac, ptr+3, 6);
+					err = 0;
+					break;
+				}
+				ptr++;
+			}
+		}
+	}
+
+	ASSERT(cis);
+	MFREE(dhd->osh, cis, SBSDIO_CIS_SIZE_LIMIT);
+
+	return err;
+}
+
 static void *
 dhdsdio_probe(uint16 venid, uint16 devid, uint16 bus_no, uint16 slot,
 	uint16 func, uint bustype, void *regsva, osl_t * osh, void *sdh)
 {
 	int ret;
 	dhd_bus_t *bus;
-
+	struct ether_addr ea_addr;
 
 	/* Init global variables at run-time, not as part of the declaration.
 	 * This is required to support init/de-init of the driver. Initialization
@@ -7153,6 +7223,12 @@ dhdsdio_probe(uint16 venid, uint16 devid, uint16 bus_no, uint16 slot,
 				goto fail;
 		}
 	}
+
+	if (dhd_conf_get_mac(bus->dhd, sdh, ea_addr.octet)) {
+		DHD_TRACE(("%s: Can not read MAC address\n", __FUNCTION__));
+	} else
+		memcpy(bus->dhd->mac.octet, (void *)&ea_addr, ETHER_ADDR_LEN);
+
 	/* Ok, have the per-port tell the stack we're open for business */
 	if (dhd_register_if(bus->dhd, 0, TRUE) != 0) {
 		DHD_ERROR(("%s: Net attach failed!!\n", __FUNCTION__));
