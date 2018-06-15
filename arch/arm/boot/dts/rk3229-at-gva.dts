@@ -122,6 +122,11 @@
 	};
 };
 
+&i2c2 {
+	status = "okay";
+	clock-frequency = <400000>;
+};
+
 &emmc {
 	mmc-hs200-1_8v;
 	max-frequency = <150000000>;
