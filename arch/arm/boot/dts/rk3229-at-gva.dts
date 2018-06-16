@@ -133,11 +133,15 @@
 	status = "okay";
 };
 
-&gpu {
-	status = "okay";
+&gmac {
+	status = "disabled";
 };
 
 &nandc {
+	status = "disabled";
+};
+
+&spi0 {
 	status = "disabled";
 };
 
