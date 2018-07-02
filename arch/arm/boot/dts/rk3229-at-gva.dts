@@ -123,13 +123,8 @@
 };
 
 &emmc {
-	/*
-	 * enable emmc ddr mode, choose the
-	 * according parameter base on the emmc
-	 * io voltage.
-	 */
-	mmc-ddr-1_8v;
-	//mmc-ddr-1_2v;
+	mmc-hs200-1_8v;
+	max-frequency = <150000000>;
 	status = "okay";
 };
 
