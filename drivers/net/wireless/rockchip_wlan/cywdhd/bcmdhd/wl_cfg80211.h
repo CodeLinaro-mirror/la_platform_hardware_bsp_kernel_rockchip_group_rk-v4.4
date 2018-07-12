@@ -392,6 +392,7 @@ struct net_info {
 	bool pm_restore;
 	bool pm_block;
 	s32 pm;
+	s32 pm_require;
 	s32 bssidx;
 	wl_cfgbss_t bss;
 	u32 ulb_bw;
