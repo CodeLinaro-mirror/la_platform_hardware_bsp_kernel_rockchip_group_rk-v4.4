@@ -15,11 +15,15 @@ static void *dhd_wlan_get_country_code(char *ccode
 #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 10, 58)) */
     );
 
+#ifdef WL_WIRELESS_EXT
+#include <wl_iw.h>
+#else
 struct cntry_locales_custom {
 	char iso_abbrev[WLC_CNTRY_BUF_SZ];	/* ISO 3166-1 country abbreviation */
 	char custom_locale[WLC_CNTRY_BUF_SZ];	/* Custom firmware locale */
 	int32 custom_locale_rev;		/* Custom local revisin default -1 */
 };
+#endif
 
 struct wifi_platform_data dhd_wlan_control = {
 	.set_power	= dhd_wlan_set_power,

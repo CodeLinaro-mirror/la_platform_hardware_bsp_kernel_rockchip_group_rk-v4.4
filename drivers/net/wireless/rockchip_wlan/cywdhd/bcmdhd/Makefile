@@ -34,7 +34,7 @@ else
 endif
 
 DHDCFLAGS += -DWL_CFG80211
-DHDCFLAGS += -DWL_VIRTUAL_APSTA #-DWL_WIRELESS_EXT
+DHDCFLAGS += -DWL_VIRTUAL_APSTA -DUSE_IW -DWL_WIRELESS_EXT
 # Print out kernel panic point of file and line info when assertion happened
 DHDCFLAGS += -DBCMASSERT_LOG
 
@@ -261,6 +261,8 @@ ifneq ($(CONFIG_PLAT_ROCKCHIP),)
 DHDOFILES += dhd_gpio.o
 DHDOFILES += rkversion.o
 endif
+
+DHDOFILES += wl_iw.o
 
 bcmdhd-objs := $(DHDOFILES)
 obj-$(DRIVER_TYPE)   += bcmdhd.o

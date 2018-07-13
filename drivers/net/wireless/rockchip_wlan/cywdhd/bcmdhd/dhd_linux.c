@@ -5640,10 +5640,12 @@ dhd_ioctl_entry(struct net_device *net, struct ifreq *ifr, int cmd)
 		}
 	}
 
+	#if (0)
 	if (!capable(CAP_NET_ADMIN)) {
 		ret = BCME_EPERM;
 		goto done;
 	}
+	#endif
 
 	if (ioc.len > 0) {
 		buflen = MIN(ioc.len, DHD_IOCTL_MAXLEN);
