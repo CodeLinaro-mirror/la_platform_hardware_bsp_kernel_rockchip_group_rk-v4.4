@@ -5189,6 +5189,9 @@ wl_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
 	struct bcm_cfg80211 *cfg = wiphy_priv(wiphy);
 	struct net_info *_net_info = wl_get_netinfo_by_netdev(cfg, dev);
 
+	pm = enabled ? PM_FAST : PM_OFF;
+	_net_info->pm_require = pm;
+
 	RETURN_EIO_IF_NOT_UP(cfg);
 	WL_DBG(("Enter\n"));
 	if (cfg->p2p_net == dev || _net_info == NULL ||
@@ -5196,9 +5199,8 @@ wl_cfg80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
 		return err;
 	}
 	/* Delete pm_enable_work */
-	wl_add_remove_pm_enable_work(cfg, FALSE, WL_HANDLER_PEND);
+	wl_add_remove_pm_enable_work(cfg, FALSE, WL_HANDLER_DEL);
 
-	pm = enabled ? PM_FAST : PM_OFF;
 	if (_net_info->pm_block) {
 		WL_ERR(("%s:Do not enable the power save for pm_block %d\n",
 			dev->name, _net_info->pm_block));
@@ -7796,37 +7798,48 @@ wl_cfg80211_stop_ap(
 	}
 
 	if (dev_role == NL80211_IFTYPE_AP) {
-		/*
-		 * Bring down the AP interface by changing role to STA.
-		 * Don't do a down or "WLC_SET_AP 0" since the shared
-		 * interface may be still running
-		 */
-		if (is_rsdb_supported) {
+        if (bssidx == 0) {
+            /*
+             * Bring down the AP interface by changing role to STA.
+             * Don't do a down or "WLC_SET_AP 0" since the shared
+             * interface may be still running
+             */
+            if (is_rsdb_supported) {
+                if ((err = wl_cfg80211_add_del_bss(cfg, dev,
+                    bssidx, NL80211_IFTYPE_STATION, 0, NULL)) < 0) {
+                    if ((err = wldev_ioctl(dev, WLC_SET_AP, &ap, sizeof(s32),
+                        true)) < 0) {
+                        WL_ERR(("setting AP mode failed %d \n", err));
+                        err = -ENOTSUPP;
+                        goto exit;
+                    }
+                }
+            } else if (is_rsdb_supported == 0) {
+                if ((err = wldev_ioctl(dev, WLC_SET_AP, &ap, sizeof(s32),
+                    true)) < 0) {
+                    WL_ERR(("setting AP mode failed %d \n", err));
+                    err = -ENOTSUPP;
+                    goto exit;
+                }
+
+                err = wldev_ioctl(dev, WLC_SET_INFRA, &infra, sizeof(s32), true);
+                if (err < 0) {
+                    WL_ERR(("SET INFRA error %d\n", err));
+                    err = -ENOTSUPP;
+                    goto exit;
+                }
+                err = wldev_ioctl(dev, WLC_UP, &ap, sizeof(s32), true);
+                if (unlikely(err)) {
+                    WL_ERR(("WLC_UP error (%d)\n", err));
+                    err = -EINVAL;
+                    goto exit;
+                }
+            }
+        } else if (cfg->cfgdev_bssidx && (bssidx == cfg->cfgdev_bssidx)) {
+			WL_DBG(("Stop SoftAP on virtual Interface bssidx:%d \n", bssidx));
 			if ((err = wl_cfg80211_add_del_bss(cfg, dev,
-				bssidx, NL80211_IFTYPE_STATION, 0, NULL)) < 0) {
-				if ((err = wldev_ioctl(dev, WLC_SET_AP, &ap, sizeof(s32),
-					true)) < 0) {
-					WL_ERR(("setting AP mode failed %d \n", err));
-					err = -ENOTSUPP;
-					goto exit;
-				}
-			}
-		} else if (is_rsdb_supported == 0) {
-			if ((err = wldev_ioctl(dev, WLC_SET_AP, &ap, sizeof(s32), true)) < 0) {
-				WL_ERR(("setting AP mode failed %d \n", err));
-				err = -ENOTSUPP;
-				goto exit;
-			}
-			err = wldev_ioctl(dev, WLC_SET_INFRA, &infra, sizeof(s32), true);
-			if (err < 0) {
-				WL_ERR(("SET INFRA error %d\n", err));
-				err = -ENOTSUPP;
-				goto exit;
-			}
-			err = wldev_ioctl(dev, WLC_UP, &ap, sizeof(s32), true);
-			if (unlikely(err)) {
-				WL_ERR(("WLC_UP error (%d)\n", err));
-				err = -EINVAL;
+                    bssidx, NL80211_IFTYPE_STATION, 0, NULL)) < 0) {
+				WL_ERR(("wl add_del_bss returned error:%d\n", err));
 				goto exit;
 			}
 		}
@@ -15266,7 +15279,6 @@ static void wl_cfg80211_work_handler(struct work_struct * work)
 	struct bcm_cfg80211 *cfg = NULL;
 	struct net_info *iter, *next;
 	s32 err = BCME_OK;
-	s32 pm = PM_FAST;
 	BCM_SET_CONTAINER_OF(cfg, work, struct bcm_cfg80211, pm_enable_work.work);
 	WL_DBG(("Enter \n"));
 	if (cfg->pm_enable_work_on) {
@@ -15285,7 +15297,7 @@ _Pragma("GCC diagnostic ignored \"-Wcast-qual\"")
 					continue;
 				if (iter->ndev) {
 					if ((err = wldev_ioctl(iter->ndev, WLC_SET_PM,
-						&pm, sizeof(pm), true)) != 0) {
+						&iter->pm_require, sizeof(iter->pm_require), true)) != 0) {
 						if (err == -ENODEV)
 							WL_DBG(("%s:netdev not ready\n",
 								iter->ndev->name));

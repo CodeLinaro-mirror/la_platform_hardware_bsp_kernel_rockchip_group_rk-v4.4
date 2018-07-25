@@ -3410,7 +3410,6 @@ int wl_iw_get_wireless_stats(struct net_device *dev, struct iw_statistics *wstat
 	int res = 0;
 	int phy_noise;
 	int rssi;
-	scb_val_t scb_val;
 #if WIRELESS_EXT > 11
 	char *cntbuf = NULL;
 	wl_cnt_info_t *cntinfo;
@@ -3425,11 +3424,9 @@ int wl_iw_get_wireless_stats(struct net_device *dev, struct iw_statistics *wstat
 	phy_noise = dtoh32(phy_noise);
 	WL_TRACE(("wl_iw_get_wireless_stats phy noise=%d\n *****", phy_noise));
 
-	scb_val.val = 0;
-	if ((res = dev_wlc_ioctl(dev, WLC_GET_RSSI, &scb_val, sizeof(scb_val_t))))
+	if ((res = dev_wlc_ioctl(dev, WLC_GET_RSSI, &rssi, sizeof(int))))
 		goto done;
 
-	rssi = dtoh32(scb_val.val);
 	WL_TRACE(("wl_iw_get_wireless_stats rssi=%d ****** \n", rssi));
 	if (rssi <= WL_IW_RSSI_NO_SIGNAL)
 		wstats->qual.qual = 0;
@@ -3456,6 +3453,7 @@ int wl_iw_get_wireless_stats(struct net_device *dev, struct iw_statistics *wstat
 #if WIRELESS_EXT > 11
 	WL_TRACE(("wl_iw_get_wireless_stats counters=%d\n *****", WL_CNTBUF_MAX_SIZE));
 
+#if (0)
 	if (WL_CNTBUF_MAX_SIZE > MAX_WLIW_IOCTL_LEN)
 	{
 		WL_ERROR(("wl_iw_get_wireless_stats buffer too short %d < %d\n",
@@ -3463,6 +3461,7 @@ int wl_iw_get_wireless_stats(struct net_device *dev, struct iw_statistics *wstat
 		res = BCME_BUFTOOSHORT;
 		goto done;
 	}
+#endif
 
 	cntbuf = kmalloc(WL_CNTBUF_MAX_SIZE, GFP_KERNEL);
 	if (!cntbuf) {

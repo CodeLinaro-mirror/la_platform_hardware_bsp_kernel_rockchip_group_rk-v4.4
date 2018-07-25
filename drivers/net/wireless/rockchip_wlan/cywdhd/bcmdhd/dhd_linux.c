@@ -759,7 +759,7 @@ uint dhd_console_ms = 0;
 module_param(dhd_console_ms, uint, 0644);
 #endif /* defined(DHD_DEBUG) */
 
-uint dhd_slpauto = TRUE;
+uint dhd_slpauto = FALSE;
 module_param(dhd_slpauto, uint, 0);
 
 #ifdef PKT_FILTER_SUPPORT
@@ -5640,10 +5640,12 @@ dhd_ioctl_entry(struct net_device *net, struct ifreq *ifr, int cmd)
 		}
 	}
 
+	#if (0)
 	if (!capable(CAP_NET_ADMIN)) {
 		ret = BCME_EPERM;
 		goto done;
 	}
+	#endif
 
 	if (ioc.len > 0) {
 		buflen = MIN(ioc.len, DHD_IOCTL_MAXLEN);
@@ -7714,7 +7716,7 @@ dhd_preinit_ioctls(dhd_pub_t *dhd)
 	uint32 wl_ap_isolate;
 #endif /* PCIE_FULL_DONGLE */
 
-#if defined(BCMSDIO) || defined(DISABLE_FRAMEBURST)
+#if defined(DISABLE_FRAMEBURST)
 	/* default frame burst enabled for PCIe, disabled for SDIO dongles and media targets */
 	uint32 frameburst = 0;
 #else

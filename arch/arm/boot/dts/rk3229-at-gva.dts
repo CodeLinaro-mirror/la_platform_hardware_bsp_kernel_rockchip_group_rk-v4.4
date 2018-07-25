@@ -102,26 +102,46 @@
 			debounce-interval = <100>;
 			wakeup-source;
 		};
+	};
 
+	spi_gpio: spi-gpio {
+		compatible = "spi-gpio";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		gpio-sck = <&gpio1 0 GPIO_ACTIVE_HIGH>;
+		gpio-mosi = <&gpio1 3 GPIO_ACTIVE_HIGH>;
+		cs-gpios = <&gpio1 7 GPIO_ACTIVE_HIGH>;
+		num-chipselects = <1>;
+		status = "okay";
+
+		spi@0 {
+			compatible = "spidev";
+			reg = <0>;
+			spi-max-frequency = <100000>;
+		};
 	};
 };
 
+&i2c2 {
+	status = "okay";
+	clock-frequency = <400000>;
+};
+
 &emmc {
-	/*
-	 * enable emmc ddr mode, choose the
-	 * according parameter base on the emmc
-	 * io voltage.
-	 */
-	mmc-ddr-1_8v;
-	//mmc-ddr-1_2v;
+	mmc-hs200-1_8v;
+	max-frequency = <150000000>;
 	status = "okay";
 };
 
-&gpu {
-	status = "okay";
+&gmac {
+	status = "disabled";
 };
 
 &nandc {
+	status = "disabled";
+};
+
+&spi0 {
 	status = "disabled";
 };
 
