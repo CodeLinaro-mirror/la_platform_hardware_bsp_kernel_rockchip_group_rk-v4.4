@@ -1623,8 +1623,10 @@ static int rk322x_usb2phy_tuning(struct rockchip_usb2phy *rphy)
 	int ret = 0;
 
 	/* Open pre-emphasize in non-chirp state for PHY0 otg port */
-	if (rphy->phy_cfg->reg == 0x760)
-		ret = regmap_write(rphy->grf, 0x76c, 0x00070004);
+	if (rphy->phy_cfg->reg == 0x760) {
+		ret = regmap_write(rphy->grf, 0x76c, 0xc0070004);
+		ret = regmap_write(rphy->grf, 0x770, 0x00010000);
+	}
 
 	return ret;
 }
