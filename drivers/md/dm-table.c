@@ -672,6 +672,7 @@ int dm_table_add_target(struct dm_table *t, const char *type,
 			sector_t start, sector_t len, char *params)
 {
 	int r = -EINVAL, argc;
+	int wait_device_count = 360;
 	char **argv;
 	struct dm_target *tgt;
 
@@ -747,6 +748,22 @@ int dm_table_add_target(struct dm_table *t, const char *type,
 		tgt->error = "couldn't split parameters (insufficient memory)";
 		goto bad;
 	}
+
+#ifdef CONFIG_ARCH_ROCKCHIP
+	while (argv &&
+	       strncmp(argv[1], "PARTUUID=", 9) == 0 &&
+	       name_to_dev_t(argv[1]) == 0) {
+		DMINFO("%s: %s: Waiting for device %s ...",
+		       dm_device_name(t->md), type, argv[1]);
+		msleep(100);
+		if (!wait_device_count) {
+			DMWARN("%s: %s: Wait for device %s Timeout",
+			       dm_device_name(t->md), type, argv[1]);
+			break;
+		}
+		--wait_device_count;
+	}
+#endif
 
 	r = tgt->type->ctr(tgt, argc, argv);
 	kfree(argv);
